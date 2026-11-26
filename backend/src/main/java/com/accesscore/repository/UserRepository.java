@@ -1,0 +1,19 @@
+package com.accesscore.repository;
+
+import com.accesscore.entity.Role;
+import com.accesscore.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+    Optional<User> findByUserCode(String userCode);
+    boolean existsByEmail(String email);
+    boolean existsByUserCode(String userCode);
+    List<User> findByRole(Role role);
+    List<User> findByDepartment(String department);
+}
