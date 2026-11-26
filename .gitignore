@@ -19,10 +19,19 @@ dist-ssr
 # Local env files
 *.local
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+backend/.env.example
+
+# Maven and Java artifacts
+backend/target/
+target/
+*.class
+*.jar
+*.war
+*.ear
 
 # Editor directories and files
 .vscode/*
@@ -37,5 +46,6 @@ dist-ssr
 
 # Temporary and system-generated files
 .system_generated
+.tools/
 *.tsbuildinfo
 .eslintcache
