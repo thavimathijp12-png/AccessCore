@@ -190,7 +190,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="text-center text-xs text-[#64748B] mt-5">
-          &copy; {new Date().getFullYear()} ACCESSCORE. All rights reserved.
+          &copy; 2026 ACCESSCORE. All rights reserved.
         </p>
       </motion.div>
     </div>

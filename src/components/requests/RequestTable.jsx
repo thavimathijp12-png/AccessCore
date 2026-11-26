@@ -2,12 +2,11 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, ChevronUp, ChevronDown, Eye, Pencil, Ban,
-  ChevronLeft, ChevronRight, Filter, ArrowUpDown, Inbox
+  ChevronLeft, ChevronRight, ArrowUpDown, Inbox
 } from 'lucide-react'
 import { cn, formatDate } from '../../utils/helpers'
 import { CATEGORIES, PRIORITIES, STATUSES } from '../../data/requestsData'
 import { PriorityBadge, StatusBadge } from './RequestShared'
-import Button from '../ui/Button'
 
 const PAGE_SIZE = 7
 
@@ -180,13 +179,14 @@ export default function RequestTable({ requests, onView, onEdit, onCancel }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.15, delay: i * 0.03 }}
-                      className="hover:bg-[#F4F2FF]/50 transition-colors"
+                      onClick={() => onView(req)}
+                      className="cursor-pointer hover:bg-[#F4F2FF]/70 transition-colors group"
                     >
-                      <td className="px-4 py-3 font-mono text-xs text-[#6D4AFF] font-bold whitespace-nowrap">
+                      <td className="px-4 py-3 font-mono text-xs text-[#6D4AFF] font-bold whitespace-nowrap group-hover:underline">
                         {req.id}
                       </td>
                       <td className="px-4 py-3 max-w-[220px]">
-                        <p className="font-semibold text-[#1E293B] truncate" title={req.title}>
+                        <p className="font-semibold text-[#1E293B] group-hover:text-[#6D4AFF] transition-colors truncate" title={req.title}>
                           {req.title}
                         </p>
                         <p className="text-xs text-slate-500 mt-0.5">{req.department}</p>
@@ -200,10 +200,13 @@ export default function RequestTable({ requests, onView, onEdit, onCancel }) {
                       <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
                         {formatDate(req.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => onView(req)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onView(req)
+                            }}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-[#6D4AFF] hover:bg-[#F4F2FF] transition-colors"
                             title="View details"
                           >
@@ -211,7 +214,10 @@ export default function RequestTable({ requests, onView, onEdit, onCancel }) {
                           </button>
                           {!['Closed', 'Rejected', 'Cancelled', 'Resolved'].includes(req.status) && (
                             <button
-                              onClick={() => onEdit(req)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onEdit(req)
+                              }}
                               className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
                               title="Edit request"
                             >
@@ -220,7 +226,10 @@ export default function RequestTable({ requests, onView, onEdit, onCancel }) {
                           )}
                           {!['Closed', 'Rejected', 'Cancelled', 'Resolved'].includes(req.status) && (
                             <button
-                              onClick={() => onCancel(req)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onCancel(req)
+                              }}
                               className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                               title="Cancel request"
                             >

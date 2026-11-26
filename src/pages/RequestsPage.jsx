@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation, useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ClipboardList, Plus, Inbox, CheckCircle2,
-  Clock, BarChart2, Loader2
+  Loader2
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import { useRequests } from '../context/RequestsContext'
 import { useToast } from '../hooks/useToast'
-import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import ToastContainer from '../components/ui/Toast'
@@ -48,15 +49,64 @@ const VIEW_DETAIL = 'detail'
 export default function RequestsPage() {
   const { requests, createRequest, updateRequest, changeStatus, cancelRequest, addComment } = useRequests()
   const { toasts, toast, dismiss } = useToast()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { id: routeRequestId } = useParams()
+  const { user } = useAuth()
 
   const [view, setView] = useState(VIEW_LIST)
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [statusFilter, setStatusFilter] = useState('')
 
+  // Determine portal base path for navigation
+  const role = (user?.role || '').toUpperCase()
+  const basePath = role === 'ADMIN' ? '/admin/requests' : role.includes('LEAD') ? '/lead/requests' : '/employee/requests'
+
   // Modal states
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [cancelTarget, setCancelTarget] = useState(null)
+
+  useEffect(() => {
+    if (location.pathname === '/employee/new-request') {
+      setCreateOpen(true)
+    }
+  }, [location.pathname])
+
+  // Sync route param :id with selected request detail view
+  useEffect(() => {
+    if (routeRequestId) {
+      const match = requests.find(r => String(r.id).toLowerCase() === String(routeRequestId).toLowerCase())
+      if (match) {
+        setSelectedRequest(match)
+        setView(VIEW_DETAIL)
+      } else {
+        // If not in local cache yet (or newly seeded), attempt to find or keep current if id matches
+        setSelectedRequest(prev => {
+          if (prev && String(prev.id).toLowerCase() === String(routeRequestId).toLowerCase()) {
+            return prev
+          }
+          return {
+            id: routeRequestId,
+            title: `Request ${routeRequestId}`,
+            department: 'IT Support',
+            category: 'General',
+            priority: 'Medium',
+            status: 'In Progress',
+            assignedTo: 'Unassigned',
+            createdBy: user?.name || 'User',
+            createdAt: new Date().toISOString(),
+            description: `Details for request ${routeRequestId}`,
+            timeline: []
+          }
+        })
+        setView(VIEW_DETAIL)
+      }
+    } else {
+      setView(VIEW_LIST)
+      setSelectedRequest(null)
+    }
+  }, [routeRequestId, requests, user?.name])
 
   // ─── Stats ───────────────────────────────────────────────────────────────
   const stats = {
@@ -127,12 +177,14 @@ export default function RequestsPage() {
   const handleView = (req) => {
     setSelectedRequest(req)
     setView(VIEW_DETAIL)
+    navigate(`${basePath}/${req.id}`)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleBack = () => {
     setView(VIEW_LIST)
     setSelectedRequest(null)
+    navigate(basePath)
   }
 
   const STAT_CONFIGS = [
@@ -141,15 +193,6 @@ export default function RequestsPage() {
     { label: 'In Progress', key: 'inProgress', icon: Loader2, iconColor: 'text-amber-500', iconBg: 'bg-amber-50 ', filter: 'inprogress' },
     { label: 'Resolved / Closed', key: 'resolved', icon: CheckCircle2, iconColor: 'text-emerald-500', iconBg: 'bg-emerald-50 ', filter: 'resolved' },
   ]
-
-  // Map stat filter shortcuts to actual status values for the table
-  const resolvedStatusFilter = statusFilter === 'open'
-    ? '' // handled by passing requests filtered below
-    : statusFilter === 'inprogress'
-      ? 'In Progress'
-      : statusFilter === 'resolved'
-        ? 'Resolved'
-        : ''
 
   const tableRequests = statusFilter === 'open'
     ? requests.filter(r => ['New', 'Assigned', 'Reopened'].includes(r.status))

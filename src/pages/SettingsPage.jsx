@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import {
-  User, Lock, Sun, Moon, Bell, Shield,
-  Save, Key, Monitor, CheckCircle2, Sliders, Globe
+  User, Sun, Moon, Bell, Shield,
+  Save, Key, Monitor, CheckCircle2
 } from 'lucide-react'
 import Card, { CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'

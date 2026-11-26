@@ -1,11 +1,9 @@
 import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Users, Plus, Search, Mail, Phone, MapPin,
-  Shield, CheckCircle2, XCircle, Edit, Trash2,
-  Calendar, Briefcase, Award, Filter, ArrowUpRight
+  Plus, Search, Mail, Phone, MapPin,
+  Edit, Trash2,
+  Calendar
 } from 'lucide-react'
-import Card, { CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Badge from '../components/ui/Badge'
@@ -110,11 +108,10 @@ export default function TeamPage() {
             <div
               key={role}
               onClick={() => setRoleFilter(r => r === role ? '' : role)}
-              className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                roleFilter === role
+              className={`p-4 rounded-xl border cursor-pointer transition-all ${roleFilter === role
                   ? 'border-blue-500 bg-[#F4F2FF]/50 '
                   : 'border-[#EDE8FA]  bg-white '
-              }`}
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-600">{role}</span>

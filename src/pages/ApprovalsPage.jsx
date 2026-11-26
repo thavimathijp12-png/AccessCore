@@ -1,10 +1,8 @@
 import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
-  CheckCircle, XCircle, Clock, ShieldCheck,
-  Calendar, User, AlertTriangle, ArrowRight, FileText, Check, X
+  CheckCircle, ShieldCheck
 } from 'lucide-react'
-import Card, { CardHeader } from '../components/ui/Card'
+import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
@@ -12,11 +10,11 @@ import Modal from '../components/ui/Modal'
 import { useApprovals } from '../context/ApprovalsContext'
 import { useToast } from '../hooks/useToast'
 import ToastContainer from '../components/ui/Toast'
-import { APPROVAL_STATUSES, APPROVAL_STATUS_COLORS, APPROVAL_TYPES } from '../data/approvalsData'
+import { APPROVAL_STATUS_COLORS } from '../data/approvalsData'
 import { formatDate } from '../utils/helpers'
 
 export default function ApprovalsPage() {
-  const { approvals, approveRequest, rejectRequest, createApproval } = useApprovals()
+  const { approvals, approveRequest, rejectRequest } = useApprovals()
   const { toasts, toast, dismiss } = useToast()
 
   const [activeTab, setActiveTab] = useState('PENDING')

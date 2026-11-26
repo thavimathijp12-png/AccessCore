@@ -1,16 +1,13 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import {
-  BarChart2, Download, Calendar, Filter, TrendingUp,
-  FileSpreadsheet, ShieldCheck, CheckCircle2, AlertTriangle, Layers
+  Download, TrendingUp,
+  ShieldCheck, CheckCircle2, AlertTriangle, Layers
 } from 'lucide-react'
 import Card, { CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'
-import Badge from '../components/ui/Badge'
 import { useRequests } from '../context/RequestsContext'
 import { useTasks } from '../context/TasksContext'
 import { useBugs } from '../context/BugsContext'
-import { useApprovals } from '../context/ApprovalsContext'
 import { useToast } from '../hooks/useToast'
 import ToastContainer from '../components/ui/Toast'
 import {
@@ -46,7 +43,6 @@ export default function ReportsPage() {
   const { requests = [] } = useRequests() || {}
   const { tasks = [] } = useTasks() || {}
   const { bugs = [] } = useBugs() || {}
-  const { approvals = [] } = useApprovals() || {}
   const { toasts, toast, dismiss } = useToast()
 
   const [dateRange, setDateRange] = useState('Quarter')
@@ -128,11 +124,10 @@ export default function ReportsPage() {
               <button
                 key={r}
                 onClick={() => setDateRange(r)}
-                className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                  dateRange === r
+                className={`px-3 py-1 rounded-md font-medium transition-colors ${dateRange === r
                     ? 'bg-[#6D4AFF] text-white shadow-xs'
                     : 'text-slate-600  hover:text-slate-900'
-                }`}
+                  }`}
               >
                 {r}
               </button>

@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Bell, Check, Trash2, CheckCircle2,
-  Clock, ShieldAlert, ArrowRight, Inbox, Filter
+  Check, Trash2,
+  ArrowRight, Inbox
 } from 'lucide-react'
-import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import { useNotifications } from '../context/NotificationsContext'

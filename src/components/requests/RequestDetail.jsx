@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  ArrowLeft, Hash, Calendar, User, Users, Tag, Flag,
-  Paperclip, MessageSquare, Send, ChevronDown, MoreHorizontal,
-  Pencil, Ban, RefreshCw, CheckCircle, Circle, AlertTriangle
+  ArrowLeft, Users,
+  Paperclip, MessageSquare, Send, ChevronDown,
+  Pencil, Ban, RefreshCw, CheckCircle, Circle
 } from 'lucide-react'
 import { cn, formatDate } from '../../utils/helpers'
 import { InfoRow, PriorityBadge, StatusBadge } from './RequestShared'
 import { STATUS_TRANSITIONS } from '../../data/requestsData'
-import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import Card from '../ui/Card'
@@ -122,7 +121,7 @@ export default function RequestDetail({ request, onBack, onEdit, onCancel, onCha
           className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#6D4AFF] transition-colors font-semibold"
         >
           <ArrowLeft size={15} />
-          Back to My Requests
+          Back to Requests
         </button>
         <div className="flex items-center gap-2 flex-wrap">
           <StatusChanger request={request} onChangeStatus={onChangeStatus} />

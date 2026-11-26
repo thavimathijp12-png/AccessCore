@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
-  CheckSquare, Plus, Search, Filter, Kanban, List,
-  Calendar, User, Clock, CheckCircle2, ChevronRight,
-  MoreVertical, Edit, Trash2, ArrowRight, MessageSquare, AlertCircle
+  Plus, Search, Kanban, List,
+  Calendar,
+  Edit, Trash2, ArrowRight, MessageSquare
 } from 'lucide-react'
-import Card, { CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Badge from '../components/ui/Badge'
@@ -23,25 +23,32 @@ import { formatDate } from '../utils/helpers'
 export default function TasksPage() {
   const { tasks, createTask, updateTask, changeTaskStatus, deleteTask, addComment, toggleSubtask } = useTasks()
   const { toasts, toast, dismiss } = useToast()
+  const location = useLocation()
 
   const [viewMode, setViewMode] = useState('kanban') // 'kanban' | 'list'
   const [search, setSearch] = useState('')
   const [priorityFilter, setPriorityFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [createModalOpen, setCreateModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (location.pathname === '/lead/assign-task') {
+      setCreateModalOpen(true)
+    }
+  }, [location.pathname])
   const [editingTask, setEditingTask] = useState(null)
   const [selectedTask, setSelectedTask] = useState(null)
   const [newComment, setNewComment] = useState('')
 
   // Form State
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     title: '',
     description: '',
     priority: 'Medium',
     assignee: 'James Wilson',
     department: 'Engineering',
     dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-  })
+  }))
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {

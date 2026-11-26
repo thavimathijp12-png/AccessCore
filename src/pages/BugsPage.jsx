@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
-  Bug, Plus, Search, Filter, ShieldAlert,
-  Calendar, User, AlertCircle, ArrowRight, MessageSquare,
-  Paperclip, CheckCircle2, ChevronRight, Server, Trash2
+  Plus, Search,
+  ArrowRight, MessageSquare,
+  Server, Trash2
 } from 'lucide-react'
-import Card, { CardHeader } from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Badge from '../components/ui/Badge'
@@ -21,14 +20,21 @@ import {
 import { formatDate } from '../utils/helpers'
 
 export default function BugsPage() {
-  const { bugs, reportBug, updateBug, changeBugStatus, assignDeveloper, addComment, deleteBug } = useBugs()
+  const { bugs, reportBug, changeBugStatus, assignDeveloper, addComment, deleteBug } = useBugs()
   const { toasts, toast, dismiss } = useToast()
+  const location = useLocation()
 
   const [search, setSearch] = useState('')
   const [severityFilter, setSeverityFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [envFilter, setEnvFilter] = useState('')
   const [reportModalOpen, setReportModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (location.pathname === '/employee/new-bug') {
+      setReportModalOpen(true)
+    }
+  }, [location.pathname])
   const [selectedBug, setSelectedBug] = useState(null)
   const [newComment, setNewComment] = useState('')
 

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Upload, Paperclip, AlertCircle } from 'lucide-react'
+import { X, Upload, Paperclip } from 'lucide-react'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { SelectField, TextareaField } from './RequestShared'
