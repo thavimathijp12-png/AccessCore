@@ -50,6 +50,9 @@ html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -57,6 +60,14 @@ body {
   padding: 0;
   background-color: #F4F2FF;
   color: #1E1B2E;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /* Scrollbar styling with Soft Violet accents */

@@ -42,6 +42,10 @@ const Input = forwardRef(function Input(
         <input
           ref={ref}
           id={id}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={
+            id ? (error ? `${id}-error` : hint ? `${id}-hint` : undefined) : undefined
+          }
           className={cn( 'w-full rounded-lg border bg-white', 'text-[#1E1B2E]', 'placeholder:text-slate-400', 'transition-colors duration-150', 'focus:outline-none focus:ring-2 focus:ring-[#6D4AFF] focus:border-transparent', 'border-[#EDE8FA]', error && 'border-red-400 focus:ring-red-400', iconLeft && 'pl-9', iconRight && 'pr-9', sizeClass, className )}
           {...rest}
         />
@@ -51,8 +55,16 @@ const Input = forwardRef(function Input(
           </span>
         )}
       </div>
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
-      {hint && !error && <p className="text-xs text-slate-400 mt-0.5">{hint}</p>}
+      {error && (
+        <p id={id ? `${id}-error` : undefined} role="alert" className="text-xs text-red-500 mt-0.5">
+          {error}
+        </p>
+      )}
+      {hint && !error && (
+        <p id={id ? `${id}-hint` : undefined} className="text-xs text-slate-400 mt-0.5">
+          {hint}
+        </p>
+      )}
     </div>
   )
 })

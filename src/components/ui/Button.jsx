@@ -37,6 +37,8 @@ export default function Button({
       whileTap={{ scale: disabled || loading ? 1 : 0.97 }}
       onClick={onClick}
       disabled={disabled || loading}
+      aria-busy={loading ? 'true' : undefined}
+      aria-disabled={disabled || loading ? 'true' : undefined}
       className={cn( 'inline-flex items-center justify-center rounded-lg border font-medium', 'transition-all duration-150 cursor-pointer', 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1', 'disabled:opacity-50 disabled:cursor-not-allowed', variants[variant], sizes[size], fullWidth && 'w-full', className )}
       {...rest}
     >

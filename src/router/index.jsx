@@ -13,4 +13,5 @@ export function RequireGuest({ children }) {
   return children
 }
 
-export default { RequireAuth, RequireGuest }
+const AuthGuards = { RequireAuth, RequireGuest }
+export default AuthGuards
