@@ -1,23 +1,20 @@
 import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   ClipboardList, CheckSquare, Bug, CheckCircle,
-  Clock, ShieldAlert, ArrowUpRight, TrendingUp,
-  Calendar, CheckCircle2, AlertTriangle, Activity,
-  PlusCircle, Zap, ArrowRight, ShieldCheck, UserCheck, RefreshCw, Sparkles
+  ArrowUpRight, TrendingUp,
+  PlusCircle, Zap, ArrowRight, ShieldCheck, UserCheck
 } from 'lucide-react'
 import Card, { CardHeader } from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
-import Avatar from '../components/ui/Avatar'
 import { useAuth } from '../context/AuthContext'
 import { useRequests } from '../context/RequestsContext'
 import { useTasks } from '../context/TasksContext'
 import { useBugs } from '../context/BugsContext'
 import { useApprovals } from '../context/ApprovalsContext'
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 
@@ -188,7 +185,7 @@ export default function DashboardPage() {
         link: '/approvals',
       },
     ]
-  }, [isEmployee, isTeamLead, openRequestsCount, activeTasksCount, openBugsCount, pendingApprovalsCount, requests, tasks, approvals, user])
+  }, [isEmployee, isTeamLead, openRequestsCount, activeTasksCount, openBugsCount, pendingApprovalsCount, requests, tasks, bugs, approvals, user])
 
   // Dynamic Recent Activity compiled from context entities
   const recentActivities = useMemo(() => {
