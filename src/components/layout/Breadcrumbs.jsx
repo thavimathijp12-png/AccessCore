@@ -2,14 +2,27 @@ import { useLocation, Link } from 'react-router-dom'
 import { ChevronRight, Home } from 'lucide-react'
 
 const ROUTE_LABELS = {
-  requests: 'My Requests',
-  tasks: 'Tasks',
+  admin: 'Admin Portal',
+  lead: 'Lead Portal',
+  employee: 'Employee Portal',
+  dashboard: 'Overview',
+  requests: 'Service Requests',
+  tasks: 'Task Management',
   bugs: 'Bug Tracking',
   approvals: 'Approvals',
   team: 'Team Management',
+  users: 'User Directory',
+  roles: 'Role Permissions',
+  members: 'Team Members',
+  performance: 'Team Performance',
+  progress: 'My Progress',
   reports: 'Reports & Analytics',
   notifications: 'Notifications',
-  settings: 'Settings',
+  settings: 'System Settings',
+  profile: 'My Profile',
+  'assign-task': 'Assign Task',
+  'new-request': 'New Service Request',
+  'new-bug': 'Report Defect',
 }
 
 export default function Breadcrumbs() {

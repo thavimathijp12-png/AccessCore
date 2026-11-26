@@ -1,5 +1,4 @@
-import { Bell, Search, Moon, Sun, ChevronDown, Menu, LogOut, UserCheck } from 'lucide-react'
-import { useTheme } from '../../context/ThemeContext'
+import { Bell, Search, ChevronDown, Menu, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useNotifications } from '../../context/NotificationsContext'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
@@ -13,16 +12,18 @@ import GlobalSearchModal from '../common/GlobalSearchModal'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 import AccessCoreLogo from '../common/AccessCoreLogo'
+import PasswordVerificationModal from '../auth/PasswordVerificationModal'
 
 export default function Topbar({ onToggleMobileSidebar }) {
   const isMobile = useIsMobile(768)
-  const { theme, toggleTheme } = useTheme()
   const { user, logout, switchRole } = useAuth()
   const { unreadCount = 0 } = useNotifications() || {}
   const [sidebarCollapsed] = useLocalStorage('ac-sidebar-collapsed', false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
+  const [switchModalOpen, setSwitchModalOpen] = useState(false)
+  const [pendingTargetRole, setPendingTargetRole] = useState(null)
   const userMenuRef = useRef(null)
   const navigate = useNavigate()
 
@@ -45,6 +46,37 @@ export default function Topbar({ onToggleMobileSidebar }) {
       document.removeEventListener('keydown', onKey)
     }
   }, [])
+
+  const getRolePrefix = () => {
+    const r = (user?.role || '').toUpperCase()
+    if (r === 'ADMIN') return '/admin'
+    if (r === 'TEAM_LEAD' || r === 'LEAD' || r === 'TEAM LEAD') return '/lead'
+    return '/employee'
+  }
+
+  const handleRequestSwitchRole = (roleKey) => {
+    setUserMenuOpen(false)
+    setPendingTargetRole(roleKey)
+    setSwitchModalOpen(true)
+  }
+
+  const handleConfirmSwitchRole = async (password) => {
+    const target = pendingTargetRole
+    const result = await switchRole(target, password)
+    if (result && result.success) {
+      setSwitchModalOpen(false)
+      setPendingTargetRole(null)
+      const cleanTarget = (target || '').toLowerCase().replace('_', '').replace(' ', '')
+      const dest = result.redirectPath || (
+        (cleanTarget === 'teamlead' || cleanTarget === 'lead') ? '/lead/dashboard' :
+        (cleanTarget === 'employee' || cleanTarget === 'emp') ? '/employee/dashboard' :
+        '/admin/dashboard'
+      )
+      navigate(dest, { replace: true })
+      return { success: true }
+    }
+    return result || { success: false, error: 'Password verification failed.' }
+  }
 
   const handleLogout = () => {
     setLogoutConfirmOpen(false)
@@ -101,7 +133,7 @@ export default function Topbar({ onToggleMobileSidebar }) {
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Notifications */}
           <button
-            onClick={() => navigate('/notifications')}
+            onClick={() => navigate(`${getRolePrefix()}/notifications`)}
             className={cn(
               'relative p-2 rounded-lg text-[#64748B]',
               'hover:bg-[#F4F2FF] hover:text-[#6D4AFF]',
@@ -167,7 +199,7 @@ export default function Topbar({ onToggleMobileSidebar }) {
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-1">Switch Dashboard View</p>
                     <div className="grid grid-cols-3 gap-1">
                       <button
-                        onClick={() => { switchRole('admin'); setUserMenuOpen(false) }}
+                        onClick={() => handleRequestSwitchRole('admin')}
                         className={cn(
                           'px-1.5 py-1 text-[10px] font-semibold rounded cursor-pointer transition-colors',
                           user?.role === 'Admin' ? 'bg-[#6D4AFF] text-white' : 'bg-[#F4F2FF] text-[#1E1B2E] hover:bg-[#EDE8FF]'
@@ -176,7 +208,7 @@ export default function Topbar({ onToggleMobileSidebar }) {
                         Admin
                       </button>
                       <button
-                        onClick={() => { switchRole('teamLead'); setUserMenuOpen(false) }}
+                        onClick={() => handleRequestSwitchRole('teamLead')}
                         className={cn(
                           'px-1.5 py-1 text-[10px] font-semibold rounded cursor-pointer transition-colors',
                           user?.role === 'Team Lead' ? 'bg-[#6D4AFF] text-white' : 'bg-[#F4F2FF] text-[#1E1B2E] hover:bg-[#EDE8FF]'
@@ -185,7 +217,7 @@ export default function Topbar({ onToggleMobileSidebar }) {
                         Lead
                       </button>
                       <button
-                        onClick={() => { switchRole('employee'); setUserMenuOpen(false) }}
+                        onClick={() => handleRequestSwitchRole('employee')}
                         className={cn(
                           'px-1.5 py-1 text-[10px] font-semibold rounded cursor-pointer transition-colors',
                           user?.role === 'Employee' ? 'bg-[#6D4AFF] text-white' : 'bg-[#F4F2FF] text-[#1E1B2E] hover:bg-[#EDE8FF]'
@@ -197,16 +229,16 @@ export default function Topbar({ onToggleMobileSidebar }) {
                   </div>
 
                   <button
-                    onClick={() => { setUserMenuOpen(false); navigate('/settings') }}
+                    onClick={() => { setUserMenuOpen(false); navigate(`${getRolePrefix()}/profile`) }}
                     className="w-full text-left px-3 py-1.5 text-xs text-[#1E1B2E] hover:bg-[#F4F2FF] hover:text-[#6D4AFF] transition-colors cursor-pointer"
                   >
                     My Profile & Settings
                   </button>
                   <button
-                    onClick={() => { setUserMenuOpen(false); navigate('/team') }}
+                    onClick={() => { setUserMenuOpen(false); navigate(`${getRolePrefix() === '/employee' ? '/employee/requests' : getRolePrefix() + '/team'}`) }}
                     className="w-full text-left px-3 py-1.5 text-xs text-[#1E1B2E] hover:bg-[#F4F2FF] hover:text-[#6D4AFF] transition-colors cursor-pointer"
                   >
-                    Team Directory
+                    {user?.role === 'Employee' ? 'My Requests' : 'Team Directory'}
                   </button>
                   <div className="my-1 border-t border-[#EDE8FA]" />
                   <button
@@ -222,6 +254,17 @@ export default function Topbar({ onToggleMobileSidebar }) {
           </div>
         </div>
       </header>
+
+      {/* Password Verification Modal for Role Switching */}
+      <PasswordVerificationModal
+        open={switchModalOpen}
+        targetRole={pendingTargetRole}
+        onClose={() => {
+          setSwitchModalOpen(false)
+          setPendingTargetRole(null)
+        }}
+        onConfirm={handleConfirmSwitchRole}
+      />
 
       {/* Global Search Modal */}
       <GlobalSearchModal
