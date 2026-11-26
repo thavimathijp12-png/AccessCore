@@ -1,7 +1,21 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { DEMO_NOTIFICATIONS } from '../data/notificationsData'
+import { api } from '../utils/api'
 
 const NotificationsContext = createContext(null)
+
+function mapApiNotification(n) {
+  return {
+    id: n.notificationCode || n.id,
+    title: n.title,
+    message: n.message,
+    category: n.category || 'System',
+    unread: n.unread !== undefined ? n.unread : true,
+    timestamp: n.createdAt || new Date().toISOString(),
+    link: n.link || '/notifications',
+    priority: n.priority || 'Medium',
+  }
+}
 
 export function NotificationsProvider({ children }) {
   const [notifications, setNotifications] = useState(() => {
@@ -9,12 +23,29 @@ export function NotificationsProvider({ children }) {
     return saved ? JSON.parse(saved) : DEMO_NOTIFICATIONS
   })
 
+  // Synchronize on mount
+  useEffect(() => {
+    api.get('/notifications').then(res => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map(mapApiNotification)
+        setNotifications(prev => {
+          const existingIds = new Set(mapped.map(m => m.id))
+          const localOnly = prev.filter(p => !existingIds.has(p.id))
+          const merged = [...mapped, ...localOnly]
+          localStorage.setItem('ac-notifications', JSON.stringify(merged))
+          return merged
+        })
+      }
+    }).catch(() => {})
+  }, [])
+
   const markAsRead = useCallback((id) => {
     setNotifications(prev => {
       const updated = prev.map(n => (n.id === id ? { ...n, unread: false } : n))
       localStorage.setItem('ac-notifications', JSON.stringify(updated))
       return updated
     })
+    api.patch(`/notifications/${id}/read`).catch(() => {})
   }, [])
 
   const markAllAsRead = useCallback(() => {
@@ -23,6 +54,7 @@ export function NotificationsProvider({ children }) {
       localStorage.setItem('ac-notifications', JSON.stringify(updated))
       return updated
     })
+    api.patch('/notifications/read-all').catch(() => {})
   }, [])
 
   const clearNotification = useCallback((id) => {

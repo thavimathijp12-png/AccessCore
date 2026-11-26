@@ -1,10 +1,9 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect } from 'react'
 
 const ThemeContext = createContext(null)
 
 export function ThemeProvider({ children }) {
   // Pure Light Professional Theme permanently enforced
-  const [theme] = useState('light')
 
   useEffect(() => {
     const root = document.documentElement
