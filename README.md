@@ -3,10 +3,13 @@
 ![ACCESSCORE Version](https://img.shields.io/badge/version-1.0.0-6D4AFF?style=flat-square)
 ![React](https://img.shields.io/badge/React-19.0.0-blue?style=flat-square&logo=react)
 ![Vite](https://img.shields.io/badge/Vite-6.0.0-purple?style=flat-square&logo=vite)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.6-6DB33F?style=flat-square&logo=springboot)
+![Java](https://img.shields.io/badge/Java-17-orange?style=flat-square&logo=openjdk)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.17-38B2AC?style=flat-square&logo=tailwind-css)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
 
-**ACCESSCORE** is an enterprise-grade workflow, service request, and team orchestration platform engineered with modern React, Vite, and Tailwind CSS. Featuring the signature **Obsidian Violet** design system, ACCESSCORE provides seamless end-to-end task automation, request management, agile Kanban workflows, role-based access control (Admin, Team Lead, Employee), bug tracking, and governance approvals.
+**ACCESSCORE** is an enterprise-grade full-stack workflow, service request, and team orchestration platform engineered with modern React, Vite, Java Spring Boot 3, and MySQL 8.0. Featuring the signature **Obsidian Violet** design system, ACCESSCORE provides seamless end-to-end task automation, request management, agile Kanban workflows, role-based access control (Admin, Team Lead, Employee), bug tracking, governance approvals, and live relational database persistence.
 
 ---
 
@@ -95,6 +98,57 @@ Ensure you have the following installed on your machine:
    ```bash
    npm run test:qa # or: node scripts/qa-audit.js
    ```
+
+### Backend Setup (Spring Boot & MySQL)
+
+1. **Configure Environment Variables**:
+   Create `backend/.env` with your MySQL credentials:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_NAME=accesscore_db
+   DB_USERNAME=root
+   DB_PASSWORD=your_mysql_password
+   ```
+
+2. **Run Backend Unit & Integration Tests**:
+   ```powershell
+   cd backend
+   mvn clean test
+   ```
+
+3. **Start Spring Boot Application**:
+   ```powershell
+   cd backend
+   mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+   ```
+   The backend API will be available at `http://localhost:8080/api`.
+
+---
+
+## 📡 REST API Catalog
+
+| Module | Endpoint | Method | Description |
+| :--- | :--- | :---: | :--- |
+| **Auth** | `/api/auth/login` | `POST` | Authenticate with email and password, returns JWT token |
+| **Auth** | `/api/auth/switch-role` | `POST` | Switch persona (Admin, Team Lead, Employee) |
+| **Auth** | `/api/auth/me` | `GET` | Retrieve current authenticated user profile |
+| **Health** | `/api/health` | `GET` | Service status & database connectivity telemetry |
+| **Requests** | `/api/requests` | `GET` | List all service requests |
+| **Requests** | `/api/requests` | `POST` | Create a new service request |
+| **Requests** | `/api/requests/{code}/status` | `PATCH` | Update request lifecycle status |
+| **Tasks** | `/api/tasks` | `GET` | List all tasks across Kanban columns |
+| **Tasks** | `/api/tasks` | `POST` | Create new workflow task |
+| **Tasks** | `/api/tasks/{code}/status` | `PATCH` | Advance task status (`TODO`, `IN_PROGRESS`, `REVIEW`, `COMPLETED`) |
+| **Bugs** | `/api/bugs` | `GET` | List incident and bug reports |
+| **Bugs** | `/api/bugs` | `POST` | Report a new bug |
+| **Bugs** | `/api/bugs/{code}/status` | `PATCH` | Update bug resolution status |
+| **Approvals** | `/api/approvals` | `GET` | List governance approvals |
+| **Approvals** | `/api/approvals/{code}/decision` | `POST` | Approve or reject request with logged audit note |
+| **Team** | `/api/team` | `GET` | List team members and role metadata |
+| **Notifications** | `/api/notifications` | `GET` | Fetch enterprise notification feed |
+| **Notifications** | `/api/notifications/{code}/read` | `PATCH` | Mark notification as read |
+| **Notifications** | `/api/notifications/read-all` | `PATCH` | Mark all notifications as read |
 
 ---
 
