@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { DEMO_REQUESTS, STATUS_TRANSITIONS } from '../data/requestsData'
+import { api } from '../utils/api'
 
 const RequestsContext = createContext(null)
 
@@ -8,6 +9,32 @@ const genId = () => {
   const id = `REQ-${String(nextIdNum).padStart(4, '0')}`
   nextIdNum++
   return id
+}
+
+function mapApiRequest(r) {
+  return {
+    id: r.requestCode || r.id,
+    title: r.title,
+    category: r.category,
+    priority: r.priority,
+    status: r.status,
+    department: r.department,
+    description: r.description,
+    assignedTo: r.assignedTo || null,
+    createdBy: r.createdBy || 'Tara Anand',
+    createdAt: r.createdAt || new Date().toISOString(),
+    updatedAt: r.updatedAt || new Date().toISOString(),
+    attachments: r.attachments || [],
+    timeline: r.timeline || [
+      {
+        id: 1,
+        type: 'created',
+        actor: r.createdBy || 'Tara Anand',
+        note: 'Request submitted.',
+        date: r.createdAt || new Date().toISOString(),
+      },
+    ],
+  }
 }
 
 export function RequestsProvider({ children }) {
@@ -20,11 +47,29 @@ export function RequestsProvider({ children }) {
     }
   })
 
+  // Synchronize with backend API on mount
+  useEffect(() => {
+    api.get('/requests').then(res => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map(mapApiRequest)
+        setRequests(prev => {
+          // Merge to preserve any client-side created requests not in backend yet
+          const existingIds = new Set(mapped.map(m => m.id))
+          const localOnly = prev.filter(p => !existingIds.has(p.id))
+          const merged = [...mapped, ...localOnly]
+          try { localStorage.setItem('ac-requests', JSON.stringify(merged)) } catch {}
+          return merged
+        })
+      }
+    }).catch(() => {})
+  }, [])
+
   // Create
   const createRequest = useCallback((formData) => {
     const now = new Date().toISOString()
+    const newReqId = genId()
     const newReq = {
-      id: genId(),
+      id: newReqId,
       title: formData.title,
       category: formData.category,
       priority: formData.priority,
@@ -46,11 +91,26 @@ export function RequestsProvider({ children }) {
         },
       ],
     }
+
+    // Optimistic state update
     setRequests(prev => {
       const updated = [newReq, ...prev]
       try { localStorage.setItem('ac-requests', JSON.stringify(updated)) } catch {}
       return updated
     })
+
+    // Async backend synchronization
+    api.post('/requests', {
+      requestCode: newReqId,
+      title: formData.title,
+      category: formData.category,
+      priority: formData.priority,
+      status: 'New',
+      department: formData.department,
+      description: formData.description,
+      createdBy: 'Tara Anand',
+    }).catch(() => {})
+
     return newReq
   }, [])
 
@@ -61,6 +121,7 @@ export function RequestsProvider({ children }) {
       try { localStorage.setItem('ac-requests', JSON.stringify(updated)) } catch {}
       return updated
     })
+    api.patch(`/requests/${id}`, patch).catch(() => {})
   }, [])
 
   // Change status
@@ -92,6 +153,10 @@ export function RequestsProvider({ children }) {
       }
       return updated
     })
+
+    if (success) {
+      api.patch(`/requests/${id}/status`, { status: newStatus }).catch(() => {})
+    }
     return success
   }, [])
 
@@ -118,6 +183,8 @@ export function RequestsProvider({ children }) {
       try { localStorage.setItem('ac-requests', JSON.stringify(updated)) } catch {}
       return updated
     })
+
+    api.patch(`/requests/${id}/status`, { status: 'Cancelled', reason }).catch(() => {})
   }, [])
 
   // Add comment

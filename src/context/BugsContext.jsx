@@ -1,9 +1,29 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { DEMO_BUGS, BUG_TRANSITIONS } from '../data/bugsData'
+import { api } from '../utils/api'
 
 const BugsContext = createContext(null)
 
 let nextBugId = DEMO_BUGS.length + 2001
+
+function mapApiBug(b) {
+  return {
+    id: b.bugCode || b.id,
+    title: b.title,
+    severity: b.severity || 'Medium',
+    status: b.status || 'OPEN',
+    environment: b.environment || 'Production',
+    assignedTo: b.assignedTo || null,
+    reportedBy: b.reportedBy || 'Tara Anand',
+    reproductionSteps: b.reproductionSteps || '',
+    expectedResult: b.expectedResult || '',
+    actualResult: b.actualResult || '',
+    createdAt: b.createdAt || new Date().toISOString(),
+    updatedAt: b.updatedAt || new Date().toISOString(),
+    attachments: b.attachments || [],
+    comments: b.comments || [],
+  }
+}
 
 export function BugsProvider({ children }) {
   const [bugs, setBugs] = useState(() => {
@@ -11,10 +31,27 @@ export function BugsProvider({ children }) {
     return saved ? JSON.parse(saved) : DEMO_BUGS
   })
 
+  // Synchronize with backend API on mount
+  useEffect(() => {
+    api.get('/bugs').then(res => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map(mapApiBug)
+        setBugs(prev => {
+          const existingIds = new Set(mapped.map(m => m.id))
+          const localOnly = prev.filter(p => !existingIds.has(p.id))
+          const merged = [...mapped, ...localOnly]
+          localStorage.setItem('ac-bugs', JSON.stringify(merged))
+          return merged
+        })
+      }
+    }).catch(() => { })
+  }, [])
+
   const reportBug = useCallback((formData) => {
     const now = new Date().toISOString()
+    const newId = `BUG-${nextBugId++}`
     const newBug = {
-      id: `BUG-${nextBugId++}`,
+      id: newId,
       title: formData.title,
       severity: formData.severity || 'Medium',
       status: 'OPEN',
@@ -29,11 +66,26 @@ export function BugsProvider({ children }) {
       attachments: formData.attachments || [],
       comments: [],
     }
+
     setBugs(prev => {
       const updated = [newBug, ...prev]
       localStorage.setItem('ac-bugs', JSON.stringify(updated))
       return updated
     })
+
+    api.post('/bugs', {
+      bugCode: newId,
+      title: formData.title,
+      severity: formData.severity || 'Medium',
+      status: 'OPEN',
+      environment: formData.environment || 'Production',
+      assignedTo: formData.assignedTo || null,
+      reportedBy: formData.reportedBy || 'Tara Anand',
+      reproductionSteps: formData.reproductionSteps || '',
+      expectedResult: formData.expectedResult || '',
+      actualResult: formData.actualResult || '',
+    }).catch(() => { })
+
     return newBug
   }, [])
 
@@ -43,6 +95,7 @@ export function BugsProvider({ children }) {
       localStorage.setItem('ac-bugs', JSON.stringify(updated))
       return updated
     })
+    api.patch(`/bugs/${id}`, patch).catch(() => { })
   }, [])
 
   const changeBugStatus = useCallback((id, newStatus) => {
@@ -62,6 +115,10 @@ export function BugsProvider({ children }) {
       localStorage.setItem('ac-bugs', JSON.stringify(updated))
       return updated
     })
+
+    if (success) {
+      api.patch(`/bugs/${id}/status`, { status: newStatus }).catch(() => { })
+    }
     return success
   }, [])
 
@@ -79,6 +136,7 @@ export function BugsProvider({ children }) {
       localStorage.setItem('ac-bugs', JSON.stringify(updated))
       return updated
     })
+    api.patch(`/bugs/${id}`, { assignedTo: developerName }).catch(() => { })
   }, [])
 
   const addComment = useCallback((id, text, author = 'Tara Anand') => {
@@ -103,6 +161,7 @@ export function BugsProvider({ children }) {
       localStorage.setItem('ac-bugs', JSON.stringify(updated))
       return updated
     })
+    api.delete(`/bugs/${id}`).catch(() => { })
   }, [])
 
   return (

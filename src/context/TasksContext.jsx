@@ -1,9 +1,28 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { DEMO_TASKS, TASK_TRANSITIONS } from '../data/tasksData'
+import { api } from '../utils/api'
 
 const TasksContext = createContext(null)
 
 let nextTaskId = DEMO_TASKS.length + 1001
+
+function mapApiTask(t) {
+  return {
+    id: t.taskCode || t.id,
+    title: t.title,
+    description: t.description || '',
+    status: t.status || 'TODO',
+    priority: t.priority || 'Medium',
+    assignee: t.assignee || 'Unassigned',
+    reporter: t.reporter || 'Tara Anand',
+    department: t.department || 'Engineering',
+    dueDate: t.dueDate || new Date(Date.now() + 7 * 86400000).toISOString(),
+    createdAt: t.createdAt || new Date().toISOString(),
+    updatedAt: t.updatedAt || new Date().toISOString(),
+    subtasks: t.subtasks || [],
+    comments: t.comments || [],
+  }
+}
 
 export function TasksProvider({ children }) {
   const [tasks, setTasks] = useState(() => {
@@ -11,15 +30,32 @@ export function TasksProvider({ children }) {
     return saved ? JSON.parse(saved) : DEMO_TASKS
   })
 
-  const sync = (newTasks) => {
-    setTasks(newTasks)
-    localStorage.setItem('ac-tasks', JSON.stringify(newTasks))
-  }
+  // Synchronize with backend API on mount
+  useEffect(() => {
+    api.get('/tasks').then(res => {
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped = res.map(mapApiTask)
+        setTasks(prev => {
+          const existingIds = new Set(mapped.map(m => m.id))
+          const localOnly = prev.filter(p => !existingIds.has(p.id))
+          const merged = [...mapped, ...localOnly]
+          localStorage.setItem('ac-tasks', JSON.stringify(merged))
+          return merged
+        })
+      }
+    }).catch(() => { })
+  }, [])
+
+  // Persist state changes
+  useEffect(() => {
+    localStorage.setItem('ac-tasks', JSON.stringify(tasks))
+  }, [tasks])
 
   const createTask = useCallback((formData) => {
     const now = new Date().toISOString()
+    const newId = `TSK-${nextTaskId++}`
     const newTask = {
-      id: `TSK-${nextTaskId++}`,
+      id: newId,
       title: formData.title,
       description: formData.description || '',
       status: 'TODO',
@@ -33,11 +69,25 @@ export function TasksProvider({ children }) {
       subtasks: formData.subtasks || [],
       comments: [],
     }
+
     setTasks(prev => {
       const updated = [newTask, ...prev]
       localStorage.setItem('ac-tasks', JSON.stringify(updated))
       return updated
     })
+
+    api.post('/tasks', {
+      taskCode: newId,
+      title: formData.title,
+      description: formData.description || '',
+      status: 'TODO',
+      priority: formData.priority || 'Medium',
+      assignee: formData.assignee || 'Unassigned',
+      reporter: formData.reporter || 'Tara Anand',
+      department: formData.department || 'Engineering',
+      dueDate: formData.dueDate,
+    }).catch(() => { })
+
     return newTask
   }, [])
 
@@ -47,6 +97,7 @@ export function TasksProvider({ children }) {
       localStorage.setItem('ac-tasks', JSON.stringify(updated))
       return updated
     })
+    api.patch(`/tasks/${id}`, patch).catch(() => { })
   }, [])
 
   const changeTaskStatus = useCallback((id, newStatus) => {
@@ -66,6 +117,10 @@ export function TasksProvider({ children }) {
       localStorage.setItem('ac-tasks', JSON.stringify(updated))
       return updated
     })
+
+    if (success) {
+      api.patch(`/tasks/${id}/status`, { status: newStatus }).catch(() => { })
+    }
     return success
   }, [])
 
@@ -75,6 +130,7 @@ export function TasksProvider({ children }) {
       localStorage.setItem('ac-tasks', JSON.stringify(updated))
       return updated
     })
+    api.delete(`/tasks/${id}`).catch(() => { })
   }, [])
 
   const addComment = useCallback((id, text, author = 'Tara Anand') => {
