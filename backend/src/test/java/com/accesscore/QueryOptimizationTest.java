@@ -1,0 +1,35 @@
+package com.accesscore;
+
+import com.accesscore.repository.NotificationItemRepository;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class QueryOptimizationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private NotificationItemRepository notificationRepository;
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void markAllNotificationsAsReadUpdatesAllUnreadInBulk() throws Exception {
+        mockMvc.perform(patch("/api/notifications/read-all"))
+                .andExpect(status().isOk());
+
+        assertThat(notificationRepository.countByUnreadTrue()).isZero();
+    }
+}

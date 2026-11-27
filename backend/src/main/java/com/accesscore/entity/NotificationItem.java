@@ -3,7 +3,10 @@ package com.accesscore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "notifications", indexes = {
+        @Index(name = "idx_notif_unread", columnList = "unread"),
+        @Index(name = "idx_notif_category", columnList = "category")
+})
 public class NotificationItem extends BaseEntity {
 
     @Column(name = "notification_code", unique = true, nullable = false, length = 32)

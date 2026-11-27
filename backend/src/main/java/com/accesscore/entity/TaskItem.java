@@ -4,7 +4,12 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tasks")
+@Table(name = "tasks", indexes = {
+        @Index(name = "idx_task_status", columnList = "status"),
+        @Index(name = "idx_task_priority", columnList = "priority"),
+        @Index(name = "idx_task_assignee", columnList = "assignee"),
+        @Index(name = "idx_task_department", columnList = "department")
+})
 public class TaskItem extends BaseEntity {
 
     @Column(name = "task_code", unique = true, nullable = false, length = 32)

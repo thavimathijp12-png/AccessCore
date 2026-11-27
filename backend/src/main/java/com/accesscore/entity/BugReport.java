@@ -3,7 +3,11 @@ package com.accesscore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "bugs")
+@Table(name = "bugs", indexes = {
+        @Index(name = "idx_bug_status", columnList = "status"),
+        @Index(name = "idx_bug_severity", columnList = "severity"),
+        @Index(name = "idx_bug_assigned_to", columnList = "assigned_to")
+})
 public class BugReport extends BaseEntity {
 
     @Column(name = "bug_code", unique = true, nullable = false, length = 32)

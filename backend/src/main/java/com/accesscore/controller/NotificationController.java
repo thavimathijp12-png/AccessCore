@@ -4,6 +4,7 @@ import com.accesscore.entity.NotificationItem;
 import com.accesscore.repository.NotificationItemRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,10 +34,9 @@ public class NotificationController {
     }
 
     @PatchMapping("/read-all")
+    @Transactional
     public ResponseEntity<Void> markAllAsRead() {
-        List<NotificationItem> list = notificationRepository.findAll();
-        list.forEach(n -> n.setUnread(false));
-        notificationRepository.saveAll(list);
+        notificationRepository.markAllAsRead();
         return ResponseEntity.ok().build();
     }
 }

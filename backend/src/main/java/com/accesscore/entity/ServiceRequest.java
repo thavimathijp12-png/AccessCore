@@ -3,7 +3,13 @@ package com.accesscore.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "service_requests")
+@Table(name = "service_requests", indexes = {
+        @Index(name = "idx_sr_status", columnList = "status"),
+        @Index(name = "idx_sr_priority", columnList = "priority"),
+        @Index(name = "idx_sr_department", columnList = "department"),
+        @Index(name = "idx_sr_assigned_to", columnList = "assigned_to"),
+        @Index(name = "idx_sr_created_by", columnList = "created_by")
+})
 public class ServiceRequest extends BaseEntity {
 
     @Column(name = "request_code", unique = true, nullable = false, length = 32)
