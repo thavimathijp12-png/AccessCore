@@ -4,6 +4,7 @@ public class HealthResponse {
     private String status;
     private String application;
     private String message;
+    private String database;
 
     public HealthResponse() {
     }
@@ -12,6 +13,13 @@ public class HealthResponse {
         this.status = status;
         this.application = application;
         this.message = message;
+    }
+
+    public HealthResponse(String status, String application, String message, String database) {
+        this.status = status;
+        this.application = application;
+        this.message = message;
+        this.database = database;
     }
 
     public String getStatus() {
@@ -36,5 +44,13 @@ public class HealthResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(String database) {
+        this.database = database;
     }
 }
