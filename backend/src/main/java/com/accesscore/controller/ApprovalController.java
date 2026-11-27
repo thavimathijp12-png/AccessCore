@@ -2,6 +2,8 @@ package com.accesscore.controller;
 
 import com.accesscore.entity.Approval;
 import com.accesscore.repository.ApprovalRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +16,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/approvals")
 public class ApprovalController {
+
+    private static final Logger log = LoggerFactory.getLogger(ApprovalController.class);
 
     private final ApprovalRepository approvalRepository;
 
@@ -43,6 +47,7 @@ public class ApprovalController {
             app.setApprover(approver);
             app.setDecisionDate(LocalDateTime.now());
             Approval saved = approvalRepository.save(app);
+            log.info("Approval decision recorded code={} status={} approver={}", code, saved.getStatus(), approver);
             return ResponseEntity.ok(saved);
         }).orElse(ResponseEntity.notFound().build());
     }

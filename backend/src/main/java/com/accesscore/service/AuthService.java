@@ -7,6 +7,8 @@ import com.accesscore.entity.Role;
 import com.accesscore.entity.User;
 import com.accesscore.repository.UserRepository;
 import com.accesscore.security.JwtTokenProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import java.util.Optional;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -37,6 +41,7 @@ public class AuthService {
             // Verify password if encoded, or if matching plain fallback for demo seeding
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword()) &&
                 !request.getPassword().equals(user.getPassword())) {
+                log.warn("Failed login attempt for email={}", email);
                 throw new IllegalArgumentException("Invalid email or password");
             }
         } else {
@@ -44,6 +49,7 @@ public class AuthService {
             user = resolveDemoPersona(email);
         }
 
+        log.info("User authenticated email={} role={}", user.getEmail(), user.getRole().name());
         String token = tokenProvider.generateToken(user.getEmail(), user.getRole().name(), user.getUserCode(), user.getName());
         return new AuthResponse(token, UserDto.fromEntity(user));
     }
@@ -81,9 +87,13 @@ public class AuthService {
         }
 
         if (!matches) {
+            log.warn("Rejected role switch attempt to targetRole={} by user={}",
+                    targetRole, currentUser != null ? currentUser.getEmail() : "anonymous");
             throw new IllegalArgumentException("Incorrect password for role switch. Access denied.");
         }
 
+        log.info("Role switched to targetRole={} actor={}",
+                targetRole, currentUser != null ? currentUser.getEmail() : targetUser.getEmail());
         // Generate JWT token with exact targetRole name (e.g., "TEAM_LEAD")
         String token = tokenProvider.generateToken(targetUser.getEmail(), targetRole.name(), targetUser.getUserCode(), targetUser.getName());
         return new AuthResponse(token, UserDto.fromEntity(targetUser));
