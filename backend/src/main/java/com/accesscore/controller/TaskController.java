@@ -1,14 +1,15 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.CreateTaskDto;
+import com.accesscore.dto.StatusUpdateRequest;
 import com.accesscore.entity.TaskItem;
 import com.accesscore.repository.TaskItemRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -34,29 +35,38 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
-    public ResponseEntity<TaskItem> createTask(@NonNull @RequestBody TaskItem task) {
-        if (task.getTaskCode() == null || task.getTaskCode().isEmpty()) {
+    public ResponseEntity<TaskItem> createTask(@Valid @RequestBody CreateTaskDto dto) {
+        String taskCode = dto.getTaskCode();
+        if (taskCode == null || taskCode.isBlank()) {
             long count = taskRepository.count() + 1001;
-            task.setTaskCode(String.format("TSK-%04d", count));
+            taskCode = String.format("TSK-%04d", count);
         }
-        if (task.getStatus() == null) {
-            task.setStatus("TODO");
-        }
+        String status = (dto.getStatus() == null || dto.getStatus().isBlank()) ? "TODO" : dto.getStatus();
+
+        TaskItem task = new TaskItem(
+                taskCode,
+                dto.getTitle().trim(),
+                dto.getDescription(),
+                status,
+                dto.getPriority().trim(),
+                dto.getAssignee(),
+                dto.getReporter(),
+                dto.getDepartment()
+        );
+        task.setDueDate(dto.getDueDate());
+
         TaskItem saved = taskRepository.save(task);
         return ResponseEntity.ok(saved);
     }
 
     @PatchMapping("/{code}/status")
     public ResponseEntity<TaskItem> updateTaskStatus(@PathVariable String code,
-            @NonNull @RequestBody Map<String, String> payload) {
+            @Valid @RequestBody StatusUpdateRequest payload) {
         TaskItem task = taskRepository.findByTaskCode(code).orElse(null);
         if (task == null) {
             return ResponseEntity.notFound().build();
         }
-        String newStatus = payload.get("status");
-        if (newStatus != null) {
-            task.setStatus(newStatus);
-        }
+        task.setStatus(payload.getStatus().trim());
         TaskItem saved = taskRepository.save(task);
         return ResponseEntity.ok(saved);
     }

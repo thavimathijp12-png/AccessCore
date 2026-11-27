@@ -1,13 +1,14 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.CreateBugReportDto;
+import com.accesscore.dto.StatusUpdateRequest;
 import com.accesscore.entity.BugReport;
 import com.accesscore.repository.BugReportRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bugs")
@@ -32,29 +33,39 @@ public class BugReportController {
     }
 
     @PostMapping
-    public ResponseEntity<BugReport> createBug(@NonNull @RequestBody BugReport bug) {
-        if (bug.getBugCode() == null || bug.getBugCode().isEmpty()) {
+    public ResponseEntity<BugReport> createBug(@Valid @RequestBody CreateBugReportDto dto) {
+        String bugCode = dto.getBugCode();
+        if (bugCode == null || bugCode.isBlank()) {
             long count = bugRepository.count() + 2001;
-            bug.setBugCode(String.format("BUG-%04d", count));
+            bugCode = String.format("BUG-%04d", count);
         }
-        if (bug.getStatus() == null) {
-            bug.setStatus("OPEN");
-        }
+        String status = (dto.getStatus() == null || dto.getStatus().isBlank()) ? "OPEN" : dto.getStatus();
+
+        BugReport bug = new BugReport(
+                bugCode,
+                dto.getTitle().trim(),
+                dto.getSeverity().trim(),
+                status,
+                dto.getEnvironment().trim(),
+                dto.getAssignedTo(),
+                dto.getReportedBy()
+        );
+        bug.setReproductionSteps(dto.getReproductionSteps());
+        bug.setExpectedResult(dto.getExpectedResult());
+        bug.setActualResult(dto.getActualResult());
+
         BugReport saved = bugRepository.save(bug);
         return ResponseEntity.ok(saved);
     }
 
     @PatchMapping("/{code}/status")
     public ResponseEntity<BugReport> updateBugStatus(@PathVariable String code,
-            @NonNull @RequestBody Map<String, String> payload) {
+            @Valid @RequestBody StatusUpdateRequest payload) {
         BugReport bug = bugRepository.findByBugCode(code).orElse(null);
         if (bug == null) {
             return ResponseEntity.notFound().build();
         }
-        String newStatus = payload.get("status");
-        if (newStatus != null) {
-            bug.setStatus(newStatus);
-        }
+        bug.setStatus(payload.getStatus().trim());
         BugReport saved = bugRepository.save(bug);
         return ResponseEntity.ok(saved);
     }

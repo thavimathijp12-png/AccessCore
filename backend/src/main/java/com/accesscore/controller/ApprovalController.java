@@ -1,7 +1,9 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.ApprovalDecisionRequest;
 import com.accesscore.entity.Approval;
 import com.accesscore.repository.ApprovalRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/approvals")
@@ -28,17 +29,18 @@ public class ApprovalController {
 
     @PostMapping("/{code}/decision")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
-    public ResponseEntity<Approval> makeDecision(@PathVariable String code, @NonNull @RequestBody Map<String, String> payload) {
+    public ResponseEntity<Approval> makeDecision(@PathVariable String code, @Valid @RequestBody ApprovalDecisionRequest payload) {
         return approvalRepository.findByApprovalCode(code).<ResponseEntity<Approval>>map((@NonNull Approval app) -> {
-            String decision = payload.get("decision"); // "APPROVED" or "REJECTED"
-            String approver = payload.getOrDefault("approver", "Tara Anand");
-            String reason = payload.get("reason");
+            String decision = payload.getDecision().trim();
+            String approver = (payload.getApprover() != null && !payload.getApprover().isBlank())
+                    ? payload.getApprover().trim()
+                    : "Tara Anand";
 
             if ("APPROVED".equalsIgnoreCase(decision)) {
                 app.setStatus("APPROVED");
             } else if ("REJECTED".equalsIgnoreCase(decision)) {
                 app.setStatus("REJECTED");
-                app.setRejectionReason(reason);
+                app.setRejectionReason(payload.getReason());
             }
             app.setApprover(approver);
             app.setDecisionDate(LocalDateTime.now());

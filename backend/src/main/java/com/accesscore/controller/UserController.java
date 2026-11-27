@@ -1,17 +1,19 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.CreateUserRequest;
+import com.accesscore.dto.StatusUpdateRequest;
+import com.accesscore.dto.UpdateUserRequest;
 import com.accesscore.dto.UserDto;
 import com.accesscore.entity.Role;
 import com.accesscore.entity.User;
 import com.accesscore.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -47,25 +49,33 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> createUser(@NonNull @RequestBody Map<String, String> payload) {
-        String name = payload.getOrDefault("name", "New Employee");
-        String email = payload.getOrDefault("email", "employee@accesscore.io").toLowerCase().trim();
-        String rawPassword = payload.getOrDefault("password", "emp123");
-        String roleStr = payload.getOrDefault("role", "EMPLOYEE");
-        String department = payload.getOrDefault("department", "Engineering");
-        String title = payload.getOrDefault("title", "Associate Engineer");
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest payload) {
+        String name = payload.getName().trim();
+        String email = payload.getEmail().toLowerCase().trim();
+        String rawPassword = (payload.getPassword() != null && !payload.getPassword().isBlank())
+                ? payload.getPassword()
+                : "emp123";
+        String roleStr = (payload.getRole() != null && !payload.getRole().isBlank()) ? payload.getRole() : "EMPLOYEE";
+        String department = (payload.getDepartment() != null && !payload.getDepartment().isBlank())
+                ? payload.getDepartment().trim()
+                : "Engineering";
+        String title = (payload.getTitle() != null && !payload.getTitle().isBlank())
+                ? payload.getTitle().trim()
+                : "Associate Engineer";
 
         long count = userRepository.count() + 1;
-        String userCode = payload.getOrDefault("userCode", String.format("USR-%03d", count));
+        String userCode = (payload.getUserCode() != null && !payload.getUserCode().isBlank())
+                ? payload.getUserCode().trim()
+                : String.format("USR-%03d", count);
 
         Role role = Role.fromString(roleStr);
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
         User user = new User(userCode, name, email, encodedPassword, role, department, title);
-        user.setStatus(payload.getOrDefault("status", "Active"));
-        user.setPhone(payload.getOrDefault("phone", "+1 (555) 000-0000"));
-        user.setLocation(payload.getOrDefault("location", "San Francisco, CA"));
-        user.setBio(payload.getOrDefault("bio", ""));
+        user.setStatus((payload.getStatus() != null && !payload.getStatus().isBlank()) ? payload.getStatus() : "Active");
+        user.setPhone(payload.getPhone() != null ? payload.getPhone() : "+1 (555) 000-0000");
+        user.setLocation(payload.getLocation() != null ? payload.getLocation() : "San Francisco, CA");
+        user.setBio(payload.getBio() != null ? payload.getBio() : "");
 
         User saved = userRepository.save(user);
         return ResponseEntity.ok(UserDto.fromEntity(saved));
@@ -73,23 +83,23 @@ public class UserController {
 
     @PatchMapping("/{code}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> updateUser(@PathVariable String code, @NonNull @RequestBody Map<String, String> payload) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable String code, @Valid @RequestBody UpdateUserRequest payload) {
         User user = userRepository.findByUserCode(code).orElse(null);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
 
-        if (payload.containsKey("name")) user.setName(payload.get("name"));
-        if (payload.containsKey("email")) user.setEmail(payload.get("email").toLowerCase().trim());
-        if (payload.containsKey("department")) user.setDepartment(payload.get("department"));
-        if (payload.containsKey("title")) user.setTitle(payload.get("title"));
-        if (payload.containsKey("phone")) user.setPhone(payload.get("phone"));
-        if (payload.containsKey("location")) user.setLocation(payload.get("location"));
-        if (payload.containsKey("bio")) user.setBio(payload.get("bio"));
-        if (payload.containsKey("role")) user.setRole(Role.fromString(payload.get("role")));
-        if (payload.containsKey("status")) user.setStatus(payload.get("status"));
-        if (payload.containsKey("password") && !payload.get("password").isBlank()) {
-            user.setPassword(passwordEncoder.encode(payload.get("password")));
+        if (payload.getName() != null && !payload.getName().isBlank()) user.setName(payload.getName().trim());
+        if (payload.getEmail() != null && !payload.getEmail().isBlank()) user.setEmail(payload.getEmail().toLowerCase().trim());
+        if (payload.getDepartment() != null) user.setDepartment(payload.getDepartment());
+        if (payload.getTitle() != null) user.setTitle(payload.getTitle());
+        if (payload.getPhone() != null) user.setPhone(payload.getPhone());
+        if (payload.getLocation() != null) user.setLocation(payload.getLocation());
+        if (payload.getBio() != null) user.setBio(payload.getBio());
+        if (payload.getRole() != null && !payload.getRole().isBlank()) user.setRole(Role.fromString(payload.getRole()));
+        if (payload.getStatus() != null && !payload.getStatus().isBlank()) user.setStatus(payload.getStatus());
+        if (payload.getPassword() != null && !payload.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(payload.getPassword()));
         }
 
         User saved = userRepository.save(user);
@@ -98,14 +108,13 @@ public class UserController {
 
     @PatchMapping("/{code}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDto> updateUserStatus(@PathVariable String code, @NonNull @RequestBody Map<String, String> payload) {
+    public ResponseEntity<UserDto> updateUserStatus(@PathVariable String code, @Valid @RequestBody StatusUpdateRequest payload) {
         User user = userRepository.findByUserCode(code).orElse(null);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
 
-        String newStatus = payload.getOrDefault("status", "Inactive");
-        user.setStatus(newStatus);
+        user.setStatus(payload.getStatus().trim());
         User saved = userRepository.save(user);
         return ResponseEntity.ok(UserDto.fromEntity(saved));
     }
