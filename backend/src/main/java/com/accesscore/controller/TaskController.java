@@ -2,6 +2,7 @@ package com.accesscore.controller;
 
 import com.accesscore.entity.TaskItem;
 import com.accesscore.repository.TaskItemRepository;
+import com.accesscore.util.WorkflowStatusValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,14 +50,12 @@ public class TaskController {
     @PatchMapping("/{code}/status")
     public ResponseEntity<TaskItem> updateTaskStatus(@PathVariable String code,
             @NonNull @RequestBody Map<String, String> payload) {
+        String newStatus = WorkflowStatusValidator.validateTaskStatus(payload.get("status"));
         TaskItem task = taskRepository.findByTaskCode(code).orElse(null);
         if (task == null) {
             return ResponseEntity.notFound().build();
         }
-        String newStatus = payload.get("status");
-        if (newStatus != null) {
-            task.setStatus(newStatus);
-        }
+        task.setStatus(newStatus);
         TaskItem saved = taskRepository.save(task);
         return ResponseEntity.ok(saved);
     }

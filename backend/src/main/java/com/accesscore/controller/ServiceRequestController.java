@@ -2,6 +2,7 @@ package com.accesscore.controller;
 
 import com.accesscore.entity.ServiceRequest;
 import com.accesscore.repository.ServiceRequestRepository;
+import com.accesscore.util.WorkflowStatusValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,11 +48,9 @@ public class ServiceRequestController {
 
     @PatchMapping("/{code}/status")
     public ResponseEntity<ServiceRequest> updateStatus(@PathVariable String code, @NonNull @RequestBody Map<String, String> payload) {
+        String newStatus = WorkflowStatusValidator.validateRequestStatus(payload.get("status"));
         return requestRepository.findByRequestCode(code).<ResponseEntity<ServiceRequest>>map((@NonNull ServiceRequest req) -> {
-            String newStatus = payload.get("status");
-            if (newStatus != null) {
-                req.setStatus(newStatus);
-            }
+            req.setStatus(newStatus);
             if (payload.containsKey("rejectionReason")) {
                 req.setRejectionReason(payload.get("rejectionReason"));
             }

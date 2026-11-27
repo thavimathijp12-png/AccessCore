@@ -2,6 +2,7 @@ package com.accesscore.controller;
 
 import com.accesscore.entity.Approval;
 import com.accesscore.repository.ApprovalRepository;
+import com.accesscore.util.WorkflowStatusValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,15 +30,13 @@ public class ApprovalController {
     @PostMapping("/{code}/decision")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<Approval> makeDecision(@PathVariable String code, @NonNull @RequestBody Map<String, String> payload) {
+        String decision = WorkflowStatusValidator.validateApprovalDecision(payload.get("decision"));
         return approvalRepository.findByApprovalCode(code).<ResponseEntity<Approval>>map((@NonNull Approval app) -> {
-            String decision = payload.get("decision"); // "APPROVED" or "REJECTED"
             String approver = payload.getOrDefault("approver", "Tara Anand");
             String reason = payload.get("reason");
 
-            if ("APPROVED".equalsIgnoreCase(decision)) {
-                app.setStatus("APPROVED");
-            } else if ("REJECTED".equalsIgnoreCase(decision)) {
-                app.setStatus("REJECTED");
+            app.setStatus(decision);
+            if ("REJECTED".equals(decision)) {
                 app.setRejectionReason(reason);
             }
             app.setApprover(approver);

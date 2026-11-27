@@ -2,6 +2,7 @@ package com.accesscore.controller;
 
 import com.accesscore.entity.BugReport;
 import com.accesscore.repository.BugReportRepository;
+import com.accesscore.util.WorkflowStatusValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
@@ -47,14 +48,12 @@ public class BugReportController {
     @PatchMapping("/{code}/status")
     public ResponseEntity<BugReport> updateBugStatus(@PathVariable String code,
             @NonNull @RequestBody Map<String, String> payload) {
+        String newStatus = WorkflowStatusValidator.validateBugStatus(payload.get("status"));
         BugReport bug = bugRepository.findByBugCode(code).orElse(null);
         if (bug == null) {
             return ResponseEntity.notFound().build();
         }
-        String newStatus = payload.get("status");
-        if (newStatus != null) {
-            bug.setStatus(newStatus);
-        }
+        bug.setStatus(newStatus);
         BugReport saved = bugRepository.save(bug);
         return ResponseEntity.ok(saved);
     }
