@@ -210,3 +210,5 @@ The application supports instant role switching via the top navigation or user m
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+<!-- pr-ref: feature/role-entity -->
