@@ -20,8 +20,15 @@ public class BugReportController {
     }
 
     @GetMapping
-    public ResponseEntity<List<BugReport>> getAllBugs() {
-        return ResponseEntity.ok(bugRepository.findAll());
+    public ResponseEntity<List<BugReport>> getAllBugs(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String environment,
+            @RequestParam(required = false) String assignedTo) {
+        if (status == null && severity == null && environment == null && assignedTo == null) {
+            return ResponseEntity.ok(bugRepository.findAll());
+        }
+        return ResponseEntity.ok(bugRepository.findFiltered(status, severity, environment, assignedTo));
     }
 
     @GetMapping("/{code}")

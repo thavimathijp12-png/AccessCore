@@ -21,8 +21,15 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskItem>> getAllTasks() {
-        return ResponseEntity.ok(taskRepository.findAll());
+    public ResponseEntity<List<TaskItem>> getAllTasks(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String assignee,
+            @RequestParam(required = false) String department) {
+        if (status == null && priority == null && assignee == null && department == null) {
+            return ResponseEntity.ok(taskRepository.findAll());
+        }
+        return ResponseEntity.ok(taskRepository.findFiltered(status, priority, assignee, department));
     }
 
     @GetMapping("/{code}")

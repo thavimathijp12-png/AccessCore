@@ -22,8 +22,14 @@ public class ApprovalController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Approval>> getAllApprovals() {
-        return ResponseEntity.ok(approvalRepository.findAll());
+    public ResponseEntity<List<Approval>> getAllApprovals(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String department) {
+        if (status == null && priority == null && department == null) {
+            return ResponseEntity.ok(approvalRepository.findAll());
+        }
+        return ResponseEntity.ok(approvalRepository.findFiltered(status, priority, department));
     }
 
     @PostMapping("/{code}/decision")

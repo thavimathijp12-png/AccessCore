@@ -21,8 +21,15 @@ public class ServiceRequestController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ServiceRequest>> getAllRequests() {
-        return ResponseEntity.ok(requestRepository.findAll());
+    public ResponseEntity<List<ServiceRequest>> getAllRequests(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) String assignedTo) {
+        if (status == null && priority == null && department == null && assignedTo == null) {
+            return ResponseEntity.ok(requestRepository.findAll());
+        }
+        return ResponseEntity.ok(requestRepository.findFiltered(status, priority, department, assignedTo));
     }
 
     @GetMapping("/{code}")
