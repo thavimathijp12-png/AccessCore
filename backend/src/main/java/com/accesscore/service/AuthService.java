@@ -1,6 +1,7 @@
 package com.accesscore.service;
 
 import com.accesscore.dto.AuthResponse;
+import com.accesscore.dto.ChangePasswordRequest;
 import com.accesscore.dto.LoginRequest;
 import com.accesscore.dto.UserDto;
 import com.accesscore.entity.Role;
@@ -87,6 +88,20 @@ public class AuthService {
         // Generate JWT token with exact targetRole name (e.g., "TEAM_LEAD")
         String token = tokenProvider.generateToken(targetUser.getEmail(), targetRole.name(), targetUser.getUserCode(), targetUser.getName());
         return new AuthResponse(token, UserDto.fromEntity(targetUser));
+    }
+
+    public void changePassword(User currentUser, ChangePasswordRequest request) {
+        if (currentUser == null) {
+            throw new IllegalArgumentException("Authentication is required to change password.");
+        }
+        if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect.");
+        }
+        if (request.getCurrentPassword().equals(request.getNewPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password.");
+        }
+        currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(currentUser);
     }
 
     private User resolveDemoPersona(String email) {
