@@ -1,9 +1,12 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.AssignBugRequest;
 import com.accesscore.entity.BugReport;
 import com.accesscore.repository.BugReportRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -57,5 +60,21 @@ public class BugReportController {
         }
         BugReport saved = bugRepository.save(bug);
         return ResponseEntity.ok(saved);
+    }
+
+    @PatchMapping("/{code}/assign")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
+    public ResponseEntity<BugReport> assignBug(
+            @PathVariable String code,
+            @Valid @RequestBody AssignBugRequest payload) {
+        BugReport bug = bugRepository.findByBugCode(code).orElse(null);
+        if (bug == null) {
+            return ResponseEntity.notFound().build();
+        }
+        bug.setAssignedTo(payload.getAssignedTo().trim());
+        if ("OPEN".equalsIgnoreCase(bug.getStatus())) {
+            bug.setStatus("ASSIGNED");
+        }
+        return ResponseEntity.ok(bugRepository.save(bug));
     }
 }
