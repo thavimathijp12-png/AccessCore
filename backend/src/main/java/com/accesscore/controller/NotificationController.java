@@ -7,6 +7,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -21,6 +22,11 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<List<NotificationItem>> getNotifications() {
         return ResponseEntity.ok(notificationRepository.findAll());
+    }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<Map<String, Long>> getUnreadCount() {
+        return ResponseEntity.ok(Map.of("unreadCount", notificationRepository.countByUnreadTrue()));
     }
 
     @PatchMapping("/{code}/read")

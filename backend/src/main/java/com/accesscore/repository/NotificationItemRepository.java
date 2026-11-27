@@ -12,4 +12,5 @@ public interface NotificationItemRepository extends JpaRepository<NotificationIt
     Optional<NotificationItem> findByNotificationCode(String notificationCode);
     List<NotificationItem> findByUnread(boolean unread);
     List<NotificationItem> findByCategory(String category);
+    long countByUnreadTrue();
 }
