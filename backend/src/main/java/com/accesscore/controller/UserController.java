@@ -1,12 +1,15 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.SelfProfileUpdateRequest;
 import com.accesscore.dto.UserDto;
 import com.accesscore.entity.Role;
 import com.accesscore.entity.User;
 import com.accesscore.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +36,34 @@ public class UserController {
                 .map(UserDto::fromEntity)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMyProfile(@AuthenticationPrincipal User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(UserDto.fromEntity(currentUser));
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<UserDto> updateMyProfile(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody SelfProfileUpdateRequest payload) {
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+        if (payload.getPhone() != null) {
+            currentUser.setPhone(payload.getPhone().trim());
+        }
+        if (payload.getLocation() != null) {
+            currentUser.setLocation(payload.getLocation().trim());
+        }
+        if (payload.getBio() != null) {
+            currentUser.setBio(payload.getBio().trim());
+        }
+        User saved = userRepository.save(currentUser);
+        return ResponseEntity.ok(UserDto.fromEntity(saved));
     }
 
     @GetMapping("/{code}")
