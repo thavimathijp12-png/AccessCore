@@ -1,30 +1,26 @@
 package com.accesscore.controller;
 
 import com.accesscore.dto.UserDto;
-import com.accesscore.repository.UserRepository;
+import com.accesscore.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/team")
 public class TeamController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public TeamController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public TeamController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getTeamMembers() {
-        List<UserDto> members = userRepository.findAll().stream()
-                .map(UserDto::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(members);
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 }

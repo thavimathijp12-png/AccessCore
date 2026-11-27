@@ -1,9 +1,8 @@
 package com.accesscore.controller;
 
 import com.accesscore.entity.NotificationItem;
-import com.accesscore.repository.NotificationItemRepository;
+import com.accesscore.service.NotificationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,31 +11,27 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    private final NotificationItemRepository notificationRepository;
+    private final NotificationService notificationService;
 
-    public NotificationController(NotificationItemRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
     }
 
     @GetMapping
     public ResponseEntity<List<NotificationItem>> getNotifications() {
-        return ResponseEntity.ok(notificationRepository.findAll());
+        return ResponseEntity.ok(notificationService.getAllNotifications());
     }
 
     @PatchMapping("/{code}/read")
     public ResponseEntity<NotificationItem> markAsRead(@PathVariable String code) {
-        return notificationRepository.findByNotificationCode(code).<ResponseEntity<NotificationItem>>map((@NonNull NotificationItem notif) -> {
-            notif.setUnread(false);
-            NotificationItem saved = notificationRepository.save(notif);
-            return ResponseEntity.ok(saved);
-        }).orElse(ResponseEntity.notFound().build());
+        return notificationService.markAsRead(code)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead() {
-        List<NotificationItem> list = notificationRepository.findAll();
-        list.forEach(n -> n.setUnread(false));
-        notificationRepository.saveAll(list);
+        notificationService.markAllAsRead();
         return ResponseEntity.ok().build();
     }
 }
