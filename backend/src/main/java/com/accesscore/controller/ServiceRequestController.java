@@ -1,7 +1,9 @@
 package com.accesscore.controller;
 
+import com.accesscore.dto.AssignRequest;
 import com.accesscore.entity.ServiceRequest;
 import com.accesscore.repository.ServiceRequestRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,6 +62,20 @@ public class ServiceRequestController {
             }
             ServiceRequest saved = requestRepository.save(req);
             return ResponseEntity.ok(saved);
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/{code}/assign")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
+    public ResponseEntity<ServiceRequest> assignRequest(
+            @PathVariable String code,
+            @Valid @RequestBody AssignRequest payload) {
+        return requestRepository.findByRequestCode(code).<ResponseEntity<ServiceRequest>>map((@NonNull ServiceRequest req) -> {
+            req.setAssignedTo(payload.getAssignedTo().trim());
+            if ("New".equalsIgnoreCase(req.getStatus())) {
+                req.setStatus("Assigned");
+            }
+            return ResponseEntity.ok(requestRepository.save(req));
         }).orElse(ResponseEntity.notFound().build());
     }
 
