@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface TaskItemRepository extends JpaRepository<TaskItem, Long> {
     Optional<TaskItem> findByTaskCode(String taskCode);
+    boolean existsByTaskCode(String taskCode);
     List<TaskItem> findByStatus(String status);
     List<TaskItem> findByAssignee(String assignee);
     List<TaskItem> findByReporter(String reporter);

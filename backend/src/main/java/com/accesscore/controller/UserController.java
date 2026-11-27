@@ -4,6 +4,7 @@ import com.accesscore.dto.UserDto;
 import com.accesscore.entity.Role;
 import com.accesscore.entity.User;
 import com.accesscore.repository.UserRepository;
+import com.accesscore.util.EntityCodeGenerator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +21,12 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EntityCodeGenerator codeGenerator;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, EntityCodeGenerator codeGenerator) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.codeGenerator = codeGenerator;
     }
 
     @GetMapping
@@ -55,8 +58,13 @@ public class UserController {
         String department = payload.getOrDefault("department", "Engineering");
         String title = payload.getOrDefault("title", "Associate Engineer");
 
-        long count = userRepository.count() + 1;
-        String userCode = payload.getOrDefault("userCode", String.format("USR-%03d", count));
+        String userCode = payload.get("userCode");
+        if (userCode == null || userCode.isBlank()) {
+            List<String> existingCodes = userRepository.findAll().stream()
+                    .map(User::getUserCode)
+                    .collect(Collectors.toList());
+            userCode = codeGenerator.nextCode("USR", 3, 1, existingCodes, userRepository::existsByUserCode);
+        }
 
         Role role = Role.fromString(roleStr);
         String encodedPassword = passwordEncoder.encode(rawPassword);

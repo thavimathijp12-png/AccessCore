@@ -1,5 +1,6 @@
 package com.accesscore.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -36,6 +37,17 @@ public class GlobalExceptionHandler {
         errorBody.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        Map<String, Object> errorBody = new HashMap<>();
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("status", HttpStatus.CONFLICT.value());
+        errorBody.put("error", "Conflict");
+        errorBody.put("message", "Resource conflict: a record with the same unique identifier already exists");
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody);
     }
 
     @ExceptionHandler(Exception.class)

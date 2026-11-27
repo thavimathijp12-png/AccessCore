@@ -2,6 +2,7 @@ package com.accesscore.controller;
 
 import com.accesscore.entity.ServiceRequest;
 import com.accesscore.repository.ServiceRequestRepository;
+import com.accesscore.util.EntityCodeGenerator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -9,15 +10,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/requests")
 public class ServiceRequestController {
 
     private final ServiceRequestRepository requestRepository;
+    private final EntityCodeGenerator codeGenerator;
 
-    public ServiceRequestController(ServiceRequestRepository requestRepository) {
+    public ServiceRequestController(ServiceRequestRepository requestRepository, EntityCodeGenerator codeGenerator) {
         this.requestRepository = requestRepository;
+        this.codeGenerator = codeGenerator;
     }
 
     @GetMapping
@@ -35,8 +39,10 @@ public class ServiceRequestController {
     @PostMapping
     public ResponseEntity<ServiceRequest> createRequest(@NonNull @RequestBody ServiceRequest request) {
         if (request.getRequestCode() == null || request.getRequestCode().isEmpty()) {
-            long count = requestRepository.count() + 1;
-            request.setRequestCode(String.format("REQ-%04d", count));
+            List<String> existingCodes = requestRepository.findAll().stream()
+                    .map(ServiceRequest::getRequestCode)
+                    .collect(Collectors.toList());
+            request.setRequestCode(codeGenerator.nextCode("REQ", 4, 1, existingCodes, requestRepository::existsByRequestCode));
         }
         if (request.getStatus() == null) {
             request.setStatus("New");
