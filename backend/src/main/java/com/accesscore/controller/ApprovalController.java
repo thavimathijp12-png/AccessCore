@@ -26,6 +26,16 @@ public class ApprovalController {
         return ResponseEntity.ok(approvalRepository.findAll());
     }
 
+    @GetMapping("/stats")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
+    public ResponseEntity<Map<String, Long>> getApprovalStats() {
+        return ResponseEntity.ok(Map.of(
+                "pending", approvalRepository.countByStatusIgnoreCase("PENDING"),
+                "approved", approvalRepository.countByStatusIgnoreCase("APPROVED"),
+                "rejected", approvalRepository.countByStatusIgnoreCase("REJECTED")
+        ));
+    }
+
     @PostMapping("/{code}/decision")
     @PreAuthorize("hasAnyRole('ADMIN', 'TEAM_LEAD')")
     public ResponseEntity<Approval> makeDecision(@PathVariable String code, @NonNull @RequestBody Map<String, String> payload) {
@@ -43,6 +53,7 @@ public class ApprovalController {
             app.setApprover(approver);
             app.setDecisionDate(LocalDateTime.now());
             Approval saved = approvalRepository.save(app);
+
             return ResponseEntity.ok(saved);
         }).orElse(ResponseEntity.notFound().build());
     }

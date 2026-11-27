@@ -13,4 +13,5 @@ public interface ApprovalRepository extends JpaRepository<Approval, Long> {
     List<Approval> findByStatus(String status);
     List<Approval> findByRequestor(String requestor);
     List<Approval> findByDepartment(String department);
+    long countByStatusIgnoreCase(String status);
 }
